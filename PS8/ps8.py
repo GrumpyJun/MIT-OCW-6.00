@@ -269,42 +269,56 @@ def dpAdvisor(subjects, maxWork):
     returns: dictionary mapping subject name to (value, work)
     """
     classnames = list(subjects.keys())
-    print(classnames)
-    solutions = dpMax(subjects, classnames, len(subjects) - 1, maxWork)
-    print(str(solutions))
+    mem = {}
+    solutions = dpMax(subjects, classnames, len(subjects) - 1, maxWork, mem)
 
-def dpMax(subjects, classnames, i, availWork):
+def dpMax(subjects, classnames, i, availWork, mem):
+    # If we've seen this before, just use the stored value
+    if (i, availWork) in mem.keys():
+        #print ("Found one ", str(i), str(availWork), mem[(i, availWork)])
+        return mem[(i, availWork)]
+    
     # If this is the last node, it must return either work or 0, because
     # we can either take the class or not take the class
     if i == 0:
         if subjects[classnames[i]][WORK] <= availWork:
+            mem[(i, availWork)] = (subjects[classnames[i]][VALUE], [classnames[i]])
             return (subjects[classnames[i]][VALUE], [classnames[i]])
         else:
+            mem[(i, availWork)] = (0, [])
             return (0, [])
 
-    without_i = dpMax(subjects, classnames, i - 1, availWork)
+    without_i = dpMax(subjects, classnames, i - 1, availWork, mem)
 
     # If we don't have enough available work to include the current node,
     # don't take that path
     if subjects[classnames[i]][WORK] > availWork:
+        mem[(i, availWork)] = without_i
         return without_i
     else:
-        with_i    = dpMax(subjects, classnames, i - 1, availWork - subjects[classnames[i]][WORK])
+        with_i    = dpMax(subjects, classnames, i - 1, availWork - subjects[classnames[i]][WORK], mem)
         with_i_value = with_i[0] + subjects[classnames[i]][VALUE]
         with_i_bests = with_i[1]
         with_i_bests.append(classnames[i])
 
     if without_i[0] >= with_i_value:
-        print("without_i bigger")
-        print("without_i_value: ", str(without_i[0]), " without_i_bests: ", str(without_i[1]))
-        print("with_i_value: ", str(with_i_value), " with_i_bests: ", str(with_i_bests))
-        print()
+        #print("without_i bigger")
+        #print("without_i_value: ", str(without_i[0]), " without_i_bests: ", str(without_i[1]))
+        #print("with_i_value: ", str(with_i_value), " with_i_bests: ", str(with_i_bests))
+        #print()
+        #print ("setting ", str((i, availWork)), " to ", str(without_i))
+        #if (i, availWork) in mem.keys() and mem[(i, availWork)] != without_i:
+        #if (i, availWork) not in mem.keys():
+            #print("Was ", mem[(i, availWork)])
+            #print("Now i:", str(i), " availWork: ", str(availWork), " without_i: ", without_i)
+        mem[(i, availWork)] = without_i
         return without_i
     else:
-        print("with_i bigger")
-        print("without_i_value: ", str(without_i[0]), " without_i_bests: ", str(without_i[1]))
-        print("with_i_value: ", str(with_i_value), " with_i_bests: ", str(with_i_bests))
-        print()
+        #print("with_i bigger")
+        #print("without_i_value: ", str(without_i[0]), " without_i_bests: ", str(without_i[1]))
+        #print("with_i_value: ", str(with_i_value), " with_i_bests: ", str(with_i_bests))
+        #print()
+        mem[(i, availWork)] = (with_i_value, with_i_bests)
         return (with_i_value, with_i_bests)
 
 #
@@ -315,8 +329,19 @@ def dpTime():
     Runs tests on dpAdvisor and measures the time required to compute an
     answer.
     """
-    subj_dict = loadSubjects("test_input_dp.txt")
-    dpAdvisor(subj_dict, 17)
+    #subj_dict = loadSubjects("test_input_dp.txt")
+    subj_dict = loadSubjects(SUBJECT_FILENAME)
+
+    for i in range(0, 50000, 2500):
+        start_time = time.time()
+
+        dpAdvisor(subj_dict, i)
+
+        end_time = time.time()
+
+        total_time = end_time - start_time
+
+        print("maxWork:", str(i), " %0.3f seconds" % total_time)
 
 # Problem 5 Observations
 # ======================
