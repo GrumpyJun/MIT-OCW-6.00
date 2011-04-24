@@ -271,22 +271,26 @@ def dpAdvisor(subjects, maxWork):
     classnames = list(subjects.keys())
     mem = {}
     solutions = dpMax(subjects, classnames, len(subjects) - 1, maxWork, mem)
+    print(solutions)
 
 def dpMax(subjects, classnames, i, availWork, mem):
+    local_mem = {}
+
     # If we've seen this before, just use the stored value
     if (i, availWork) in mem.keys():
-        #print ("Found one ", str(i), str(availWork), mem[(i, availWork)])
         return mem[(i, availWork)]
     
     # If this is the last node, it must return either work or 0, because
     # we can either take the class or not take the class
     if i == 0:
         if subjects[classnames[i]][WORK] <= availWork:
-            mem[(i, availWork)] = (subjects[classnames[i]][VALUE], [classnames[i]])
-            return (subjects[classnames[i]][VALUE], [classnames[i]])
+            local_mem = (subjects[classnames[i]][VALUE], [classnames[i]])
+            mem[(i, availWork)] = local_mem
+            return local_mem
         else:
-            mem[(i, availWork)] = (0, [])
-            return (0, [])
+            local_mem = (0, [])
+            mem[(i, availWork)] = local_mem
+            return local_mem
 
     without_i = dpMax(subjects, classnames, i - 1, availWork, mem)
 
@@ -298,28 +302,41 @@ def dpMax(subjects, classnames, i, availWork, mem):
     else:
         with_i    = dpMax(subjects, classnames, i - 1, availWork - subjects[classnames[i]][WORK], mem)
         with_i_value = with_i[0] + subjects[classnames[i]][VALUE]
-        with_i_bests = with_i[1]
+        with_i_bests = with_i[1][:]
         with_i_bests.append(classnames[i])
 
     if without_i[0] >= with_i_value:
-        #print("without_i bigger")
-        #print("without_i_value: ", str(without_i[0]), " without_i_bests: ", str(without_i[1]))
-        #print("with_i_value: ", str(with_i_value), " with_i_bests: ", str(with_i_bests))
-        #print()
-        #print ("setting ", str((i, availWork)), " to ", str(without_i))
-        #if (i, availWork) in mem.keys() and mem[(i, availWork)] != without_i:
-        #if (i, availWork) not in mem.keys():
-            #print("Was ", mem[(i, availWork)])
-            #print("Now i:", str(i), " availWork: ", str(availWork), " without_i: ", without_i)
         mem[(i, availWork)] = without_i
         return without_i
     else:
-        #print("with_i bigger")
-        #print("without_i_value: ", str(without_i[0]), " without_i_bests: ", str(without_i[1]))
-        #print("with_i_value: ", str(with_i_value), " with_i_bests: ", str(with_i_bests))
-        #print()
         mem[(i, availWork)] = (with_i_value, with_i_bests)
         return (with_i_value, with_i_bests)
+
+#(0, [])
+#maxWork: 0  0.00000 seconds
+#(10, ['7.17'])
+#maxWork: 1  0.00000 seconds
+#(20, ['7.17', '6.00'])
+#maxWork: 2  0.00000 seconds
+#(27, ['7.16', '7.17', '6.00'])
+#maxWork: 3  0.01000 seconds
+#(34, ['7.16', '7.17', '12.04', '6.00'])
+#maxWork: 4  0.00000 seconds
+#(41, ['7.16', '7.17', '12.04', '15.01', '6.00'])
+#maxWork: 5  0.00000 seconds
+#(48, ['7.16', '7.17', '12.04', '15.01', '6.00', '7.00'])
+#maxWork: 6  0.00000 seconds
+#(54, ['7.16', '7.17', '24.12', '12.04', '15.01', '6.00', '7.00'])
+#maxWork: 7  0.00000 seconds
+#(60, ['7.16', '7.17', '24.12', '12.04', '15.01', '6.00', '7.00', '2.03'])
+#maxWork: 8  0.01300 seconds
+#(64, ['7.16', '7.17', '24.12', '7.18', '12.04', '15.01', '6.00', '7.00'])
+#maxWork: 9  0.00400 seconds
+#(70, ['7.16', '7.17', '24.12', '7.18', '12.04', '15.01', '6.00', '7.00', '2.03'])
+#maxWork: 10  0.00500 seconds
+#(74, ['7.16', '7.17', '24.12', '7.18', '12.04', '15.01', '22.03', '6.00', '7.00'])
+#maxWork: 11  0.00500 seconds
+
 
 #
 # Problem 5: Performance Comparison
@@ -332,7 +349,7 @@ def dpTime():
     #subj_dict = loadSubjects("test_input_dp.txt")
     subj_dict = loadSubjects(SUBJECT_FILENAME)
 
-    for i in range(0, 50000, 2500):
+    for i in range(0, 12):
         start_time = time.time()
 
         dpAdvisor(subj_dict, i)
@@ -341,7 +358,7 @@ def dpTime():
 
         total_time = end_time - start_time
 
-        print("maxWork:", str(i), " %0.3f seconds" % total_time)
+        print("maxWork:", str(i), " %0.5f seconds" % total_time)
 
 # Problem 5 Observations
 # ======================
